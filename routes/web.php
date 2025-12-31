@@ -31,8 +31,6 @@ Route::prefix('petshop')->name('petshop.')->group(function () {
 
 });
 
-// --- GROUP KHUSUS CUSTOMER ---
-// Semua URL di sini akan berawalan /customer
 Route::prefix('customer')->name('customer.')->group(function () {
 
     Route::get('/dashboard', function () {
@@ -40,3 +38,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
     })->name('dashboard');
 
 });
+
+// Route untuk halaman Login Mitra/Petshop
+Route::get('/petshop/login', function () {
+    return view('petshop.auth.login'); // <-- Sesuaikan dengan folder baru
+})->name('petshop.login');
