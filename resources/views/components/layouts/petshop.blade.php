@@ -48,7 +48,8 @@
                     <span>Layanan</span>
                 </a>
 
-                <a href="#" class="flex items-center px-6 py-3 hover:bg-white/10 opacity-80 hover:opacity-100">
+                <a href="{{ route('petshop.pesanan') }}"
+                class="flex items-center px-6 py-3 {{ request()->routeIs('petshop.pesanan') ? 'bg-white/20 border-l-4 border-white' : 'hover:bg-white/10 opacity-80 hover:opacity-100' }}">
                     <i class="fas fa-car w-8"></i>
                     <span>Pesanan</span>
                 </a>
