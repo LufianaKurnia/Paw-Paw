@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone', // Tambahan
+        'role',  // Tambahan
+        'profile_photo',
     ];
 
     /**
@@ -44,5 +47,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // --- TAMBAHAN KODE DI SINI ---
+
+    // Relasi: User punya satu Petshop
+    public function petshop()
+    {
+        return $this->hasOne(Petshop::class);
     }
 }
