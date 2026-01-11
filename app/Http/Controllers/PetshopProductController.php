@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage; // Pastikan ini ada
 use App\Models\Product;
 use App\Models\GroomingService;
 
@@ -25,7 +26,7 @@ class PetshopProductController extends Controller
         return view('petshop.layanan', compact('products', 'services', 'groomingHistory', 'petshop'));
     }
 
-    // --- SIMPAN PRODUK BARU (MODIFIKASI CLOUDINARY) ---
+    // --- STORE (Simpan Lokal) ---
     public function store(Request $request)
     {
         $request->validate([
@@ -41,9 +42,8 @@ class PetshopProductController extends Controller
         $data['petshop_id'] = Auth::user()->petshop->id;
 
         if ($request->hasFile('image')) {
-            // UBAH KE CLOUDINARY
-            $uploadedFileUrl = cloudinary()->upload($request->file('image')->getRealPath())->getSecurePath();
-            $data['image'] = $uploadedFileUrl;
+            // Simpan ke folder public/storage/products
+            $data['image'] = $request->file('image')->store('products', 'public');
         }
 
         Product::create($data);
@@ -51,7 +51,7 @@ class PetshopProductController extends Controller
         return redirect()->route('petshop.layanan')->with('success', 'Produk berhasil ditambahkan!');
     }
 
-    // --- UPDATE PRODUK (MODIFIKASI CLOUDINARY) ---
+    // --- UPDATE (Simpan Lokal) ---
     public function update(Request $request, $id)
     {
         $product = Product::where('id', $id)->where('petshop_id', Auth::user()->petshop->id)->firstOrFail();
@@ -68,9 +68,12 @@ class PetshopProductController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('image')) {
-            // UBAH KE CLOUDINARY (Langsung timpa URL lama)
-            $uploadedFileUrl = cloudinary()->upload($request->file('image')->getRealPath())->getSecurePath();
-            $data['image'] = $uploadedFileUrl;
+            // Hapus gambar lama
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            // Simpan gambar baru
+            $data['image'] = $request->file('image')->store('products', 'public');
         }
 
         $product->update($data);
@@ -78,18 +81,20 @@ class PetshopProductController extends Controller
         return redirect()->route('petshop.layanan')->with('success', 'Produk berhasil diperbarui!');
     }
 
-    // --- HAPUS PRODUK ---
+    // --- DELETE ---
     public function destroy($id)
     {
         $product = Product::where('id', $id)->where('petshop_id', Auth::user()->petshop->id)->firstOrFail();
 
-        // Kita tidak perlu hapus file di Cloudinary secara manual untuk tugas ini (biar aman dan tidak error)
-        $product->delete();
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
 
+        $product->delete();
         return redirect()->route('petshop.layanan')->with('success', 'Produk berhasil dihapus!');
     }
 
-    // --- BAGIAN GROOMING (TIDAK PERLU DIUBAH KARENA TIDAK ADA GAMBAR) ---
+    // --- GROOMING (Tetap Sama) ---
     public function storeGrooming(Request $request)
     {
         $request->validate([
@@ -110,33 +115,15 @@ class PetshopProductController extends Controller
 
     public function updateGrooming(Request $request, $id)
     {
-        $service = GroomingService::where('id', $id)
-            ->where('petshop_id', Auth::user()->petshop->id)
-            ->firstOrFail();
-
-        $request->validate([
-            'name' => 'required|max:255',
-            'pet_type' => 'required',
-            'price' => 'required|numeric',
-        ]);
-
-        $service->update([
-            'name' => $request->name,
-            'pet_type' => $request->pet_type,
-            'price' => $request->price,
-        ]);
-
+        $service = GroomingService::where('id', $id)->where('petshop_id', Auth::user()->petshop->id)->firstOrFail();
+        $service->update($request->only(['name', 'pet_type', 'price']));
         return redirect()->route('petshop.layanan')->with('success', 'Layanan Grooming berhasil diperbarui!');
     }
 
     public function destroyGrooming($id)
     {
-        $service = GroomingService::where('id', $id)
-            ->where('petshop_id', Auth::user()->petshop->id)
-            ->firstOrFail();
-
+        $service = GroomingService::where('id', $id)->where('petshop_id', Auth::user()->petshop->id)->firstOrFail();
         $service->delete();
-
         return redirect()->route('petshop.layanan')->with('success', 'Layanan Grooming berhasil dihapus!');
     }
 }

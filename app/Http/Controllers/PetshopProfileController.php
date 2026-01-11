@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage; // Pastikan ini ada
 use App\Models\Petshop;
 
 class PetshopProfileController extends Controller
@@ -34,10 +35,11 @@ class PetshopProfileController extends Controller
         $user->name = $request->name;
         $user->phone = $request->phone;
 
-        // --- Cek Foto Profil (CLOUDINARY) ---
         if ($request->hasFile('profile_photo')) {
-            $uploadedFileUrl = cloudinary()->upload($request->file('profile_photo')->getRealPath())->getSecurePath();
-            $user->profile_photo = $uploadedFileUrl;
+            if ($user->profile_photo) {
+                Storage::disk('public')->delete($user->profile_photo);
+            }
+            $user->profile_photo = $request->file('profile_photo')->store('profile-photos', 'public');
         }
 
         $user->save();
@@ -48,16 +50,18 @@ class PetshopProfileController extends Controller
         $petshop->alamat = $request->alamat;
         $petshop->deskripsi = $request->deskripsi;
 
-        // --- Upload Logo (CLOUDINARY) ---
         if ($request->hasFile('logo')) {
-            $uploadedFileUrl = cloudinary()->upload($request->file('logo')->getRealPath())->getSecurePath();
-            $petshop->logo = $uploadedFileUrl;
+            if ($petshop->logo) {
+                Storage::disk('public')->delete($petshop->logo);
+            }
+            $petshop->logo = $request->file('logo')->store('petshop-logos', 'public');
         }
 
-        // --- Upload Banner (CLOUDINARY) ---
         if ($request->hasFile('banner')) {
-            $uploadedFileUrl = cloudinary()->upload($request->file('banner')->getRealPath())->getSecurePath();
-            $petshop->banner = $uploadedFileUrl;
+            if ($petshop->banner) {
+                Storage::disk('public')->delete($petshop->banner);
+            }
+            $petshop->banner = $request->file('banner')->store('petshop-banners', 'public');
         }
 
         $user->petshop()->save($petshop);
