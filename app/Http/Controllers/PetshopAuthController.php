@@ -24,7 +24,7 @@ class PetshopAuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended(route('petshop.dashboard'));
+            return redirect()->intended(route('petshop.layanan'));
         }
 
         return back()->withErrors([
