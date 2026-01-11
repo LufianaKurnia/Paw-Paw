@@ -5,19 +5,19 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User; // <-- Kita pakai Model User biar lebih pintar
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
         // ==============================
-        // 1. BIKIN USER (Pakai firstOrCreate)
+        // 1. BIKIN USER (Owner)
         // ==============================
 
-        // Logic: Cari email 'hana@...'. Kalau ketemu, ambil datanya. Kalau ga ada, buat baru.
+        // User 1: Hana
         $hana = User::firstOrCreate(
-            ['email' => 'hana@pawpaw.com'], // Kunci pencarian
+            ['email' => 'hana@pawpaw.com'], // Cek email ini
             [
                 'name' => 'Hana Sobarna',
                 'password' => Hash::make('12345678'),
@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
 
         // User 2: Hani
         $hani = User::firstOrCreate(
-            ['email' => 'hani@pawpaw.com'],
+            ['email' => 'hani@pawpaw.com'], // Cek email ini
             [
                 'name' => 'Hani Sobarni',
                 'password' => Hash::make('12345678'),
@@ -40,32 +40,34 @@ class DatabaseSeeder extends Seeder
         );
 
         // ==============================
-        // 2. BIKIN TOKO (Pakai updateOrInsert)
+        // 2. BIKIN TOKO (Petshop)
         // ==============================
 
-        // Toko Hana
-        // Kita pakai ID dari variabel $hana yang baru kita dapat di atas ($hana->id)
-        DB::table('petshops')->updateOrInsert(
-            ['user_id' => $hana->id], // Kunci: Cek apakah user ini udah punya toko?
-            [
+        $cekTokoHana = DB::table('petshops')->where('user_id', $hana->id)->first();
+
+        if (!$cekTokoHana) {
+            DB::table('petshops')->insert([
+                'user_id' => $hana->id,
                 'nama_toko' => 'Ello Petshop Sumedang',
                 'alamat' => 'Jl. Angkrek no. 138, Sumedang',
-                'rating' => 4.5,
+                'rating' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
-        );
+            ]);
+        }
 
-        // Toko Hani
-        DB::table('petshops')->updateOrInsert(
-            ['user_id' => $hani->id], // Kunci: Cek apakah user ini udah punya toko?
-            [
+        // --- Toko Hani ---
+        $cekTokoHani = DB::table('petshops')->where('user_id', $hani->id)->first();
+
+        if (!$cekTokoHani) {
+            DB::table('petshops')->insert([
+                'user_id' => $hani->id,
                 'nama_toko' => 'Elli Petshop Bandung',
                 'alamat' => 'Jl. Dago Atas No. 10, Bandung',
-                'rating' => 5.0,
+                'rating' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
-        );
+            ]);
+        }
     }
 }
